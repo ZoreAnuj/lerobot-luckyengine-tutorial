@@ -748,6 +748,13 @@ SDK; it speaks the same gRPC contract LuckyLab uses.
 &mdash; state and any synchronized camera frames in one object &mdash; so there's
 no async stream to race against.</p>
 
+<figure style="margin:24px auto 28px; max-width:560px;">
+<video controls preload="metadata" style="width:100%; display:block;" src="videos/le_finalist_trials.mp4"></video>
+<figcaption style="text-align:center;">Trained policy running in LE during in-domain eval &mdash; finalist checkpoint at 96&times;96 / 30 fps.</figcaption>
+</figure>
+
+<details class="code-collapse">
+<summary>Show full in-domain eval loop (Python)</summary>
 <pre><code>from luckyrobots import Session
 
 with Session(host="127.0.0.1", port=50051) as session:
@@ -776,6 +783,7 @@ with Session(host="127.0.0.1", port=50051) as session:
             if success(obs_resp):
                 break
 </code></pre>
+</details>
 
 <div class="callout">
 <b>A few things readers tripped on.</b>
