@@ -813,21 +813,6 @@ hardware-free generalization probe.</p>
 <figcaption style="text-align:center;">Vanilla IMLE checkpoint <code>044800</code>, zero-shot in Genesis. 96&times;96 @ 30 fps.</figcaption>
 </figure>
 
-<div class="callout warn">
-<b>Genesis pitfalls that cost us days.</b>
-<ul style="margin:6px 0 0 0; padding-left:18px;">
-  <li><b>Windows DLL order:</b> <code>import genesis</code> MUST come BEFORE
-  <code>import pyarrow</code> (or anything that pulls torch). PyArrow DLLs
-  poison Genesis's loader.</li>
-  <li><b>Camera flip:</b> LE returns upside-down frames; apply ONE
-  <code>np.flip(axis=0)</code> on the LE side. Do <em>not</em> flip Genesis
-  frames again.</li>
-  <li><b>Action units:</b> Genesis won't denormalize for you. If your dataset
-  stored raw joint radians, call <code>control_dofs_position</code> with raw
-  joint radians.</li>
-</ul>
-</div>
-
 <a id="sec5"></a>
 <h2>5 &middot; Evaluate on the real robot</h2>
 
