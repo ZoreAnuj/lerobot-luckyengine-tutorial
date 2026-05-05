@@ -828,6 +828,11 @@ hardware-free generalization probe.</p>
 LE&nbsp;&rarr;&nbsp;Genesis, the deployment loop is mechanically simple: read
 cameras + joints, run the policy, send a position command, repeat.</p>
 
+<figure style="margin:24px auto 28px; max-width:560px;">
+<video controls preload="metadata" style="width:100%; display:block;" src="videos/sim2real_real_robot.mp4"></video>
+<figcaption style="text-align:center;">Real SO-100 running the same checkpoint trained only on simulator demos.</figcaption>
+</figure>
+
 <figure>
 <svg viewBox="0 0 1100 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#fafbfc;border:1px solid #eee;border-radius:4px;">
   <defs>
@@ -871,17 +876,10 @@ cameras + joints, run the policy, send a position command, repeat.</p>
 </figure>
 
 <ol class="steps">
-  <li><b>Match cameras.</b> Same model, same resolution, same mounting pose
-  relative to the robot base as in your LE scene. If you mirrored a camera in
-  LE, mirror it on the real cam too.</li>
-  <li><b>Match control rate &amp; action units.</b> If you trained at 30 Hz,
-  run at 30 Hz with a precise sleep. If your dataset stored radians but the
-  follower expects degrees, convert <em>and</em> verify the dataset's
-  min/max against the calibrated joint range.</li>
-  <li><b>Calibrate joint zeros.</b> Re-run calibration on the real arm so
-  "0 rad in the dataset" maps to physical home consistently across power cycles.</li>
-  <li><b>Add a safety scan.</b> Workspace + per-joint position + velocity caps.
-  Abort (don't clip silently) if the policy drifts off-distribution.</li>
+  <li><b>Match cameras &amp; control rate.</b> Same model, resolution, mounting pose, and Hz as your LE scene. If you mirrored a camera in LE, mirror it on the real cam (<code>cv2.flip(..., 1)</code>) — without that flip the policy sees a mirror-image arm and fails silently.</li>
+  <li><b>Match action units.</b> Convert radians&harr;degrees if needed and verify the dataset's min/max against the calibrated joint range.</li>
+  <li><b>Calibrate joint zeros.</b> Re-run calibration so "0 rad in the dataset" maps to physical home consistently across power cycles.</li>
+  <li><b>Add a safety scan.</b> Workspace + per-joint position + velocity caps. Abort (don't clip silently) if the policy drifts off-distribution.</li>
 </ol>
 
 <details class="code-collapse">
@@ -933,15 +931,8 @@ while step &lt; max_steps:
 </code></pre>
 </details>
 
-<p class="muted">Note the <code>cv2.flip(..., 1)</code> on LaptopCamera &mdash; without it the policy sees a mirror-image arm and fails silently.</p>
-
 <div class="callout real">
-<b>33 ms is tight, but achievable.</b> On an RTX 5090 the SO-100 ACT/IMLE
-forward pass is 9&ndash;17 ms with <code>cudnn.benchmark=True</code>, AMP, and
-8 warmup passes. Camera I/O is the next item; use
-<code>async_read</code> backends so the camera thread overlaps with the
-previous step's policy call. If you can't hold 30 Hz, drop to 20 Hz
-<em>uniformly</em> &mdash; jitter hurts more than a lower steady rate.
+<b>33 ms is tight, but achievable.</b> On an RTX 5090 the SO-100 forward pass is 9–17 ms with <code>cudnn.benchmark=True</code> + AMP + warmup. Use <code>async_read</code> camera backends so I/O overlaps with the previous step's policy call. If you can't hold 30 Hz, drop to 20 Hz <em>uniformly</em> — jitter hurts more than a lower steady rate.
 </div>
 
 <a id="sec6"></a>
