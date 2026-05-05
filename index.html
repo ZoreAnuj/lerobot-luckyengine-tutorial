@@ -550,6 +550,37 @@ header.page h1 .hl-yellow {
   text-underline-offset: 6px;
 }
 
+
+details.code-collapse {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 16px 0;
+}
+details.code-collapse summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink);
+  list-style: none;
+  font-size: 0.95em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+details.code-collapse summary::before {
+  content: "▶";
+  display: inline-block;
+  transition: transform 0.15s;
+  font-size: 0.7em;
+  color: var(--muted);
+}
+details.code-collapse[open] summary::before {
+  transform: rotate(90deg);
+}
+details.code-collapse summary::-webkit-details-marker { display: none; }
+details.code-collapse pre { margin-top: 12px; margin-bottom: 0; }
+
 </style></head><body>
 
 <header class="page">
@@ -775,18 +806,12 @@ hardware-free generalization probe.</p>
   <li><b>Rebuild task objects.</b> Close enough is good enough &mdash; you're testing generalization, not pixel parity.</li>
 </ol>
 
-<p>The reference Genesis backend
-(your <code>genesis_backend.py</code>) wraps a built-in SO-100 scene
-behind a small, stable Python interface &mdash;
-<code>connect()</code>, <code>reset(seed=...)</code>,
-<code>step(action)</code>, <code>get_observation()</code>,
-<code>get_entity_position(name)</code>, <code>set_block_pose(...)</code>,
-<code>close()</code>. It does not expose the LuckyLab <code>Session</code>
-contract directly; the Genesis sweep
-(your eval driver) is a separate eval driver that
-loads the same checkpoint, calls these methods instead of LE's, and assembles
-the same observation dict your policy was trained on. Same checkpoint,
-different driver.</p>
+<p>The reference <code>genesis_backend.py</code> wraps a built-in SO-100 scene behind a small Python interface (<code>connect</code>, <code>reset</code>, <code>step</code>, <code>get_observation</code>, &hellip;). Your eval driver loads the same checkpoint and calls those instead of LE’s. Same checkpoint, different driver.</p>
+
+<figure style="margin:24px auto 28px; max-width:560px;">
+<video controls preload="metadata" style="width:100%; display:block;" src="videos/genesis_sim2sim.mp4"></video>
+<figcaption style="text-align:center;">Vanilla IMLE checkpoint <code>044800</code>, zero-shot in Genesis. 96&times;96 @ 30 fps.</figcaption>
+</figure>
 
 <div class="callout warn">
 <b>Genesis pitfalls that cost us days.</b>
@@ -866,6 +891,8 @@ cameras + joints, run the policy, send a position command, repeat.</p>
   Abort (don't clip silently) if the policy drifts off-distribution.</li>
 </ol>
 
+<details class="code-collapse">
+<summary>Show full real-robot inference loop (Python)</summary>
 <pre><code>from lerobot.robots.so_follower.so_follower import SOFollower
 from lerobot.robots.so_follower.config_so_follower import SOFollowerRobotConfig
 from lerobot.cameras.realsense.camera_realsense import RealSenseCamera
@@ -911,6 +938,7 @@ while step &lt; max_steps:
                           for n, v in zip(JOINT_NAMES, action_real)})
     precise_sleep(dt - (time.perf_counter() - t0))
 </code></pre>
+</details>
 
 <p class="muted">Note the <code>cv2.flip(..., 1)</code> on LaptopCamera &mdash; without it the policy sees a mirror-image arm and fails silently.</p>
 
